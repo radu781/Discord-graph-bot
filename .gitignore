@@ -1,4 +1,7 @@
 .vscode/
+
 *.class
+*.jar
+
 *.env
 !example.*.env
