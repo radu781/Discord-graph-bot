@@ -1,6 +1,9 @@
 package discord_bot.listeners;
 
 import java.util.HashMap;
+import java.util.List;
+
+import org.json.simple.parser.ParseException;
 
 import discord_bot.model.TopicModel;
 import discord_bot.view.Topic;
@@ -16,16 +19,22 @@ public class ReactionListener extends ListenerAdapter {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.getReaction().isSelf()) {
             StringBuilder sendMe = new StringBuilder();
-            Topic topic = topicModel.searchPages(messages.get(event.getMessageIdLong()));
-            sendMe.append("**").append(topic.getTitle()).append("**")
-                    .append("\n").append(topic.getContent());
+            List<Topic> topics;
+            try {
+                topics = topicModel.searchPages(messages.get(event.getMessageIdLong()));
+            } catch (ParseException e) {
+                return;
+            }
+            Topic firstTopic = topics.get(0);
+            sendMe.append("**").append(firstTopic.getTitle()).append("**")
+                    .append("\n").append(firstTopic.getContent());
             if (sendMe.length() > 2000) {
                 sendMe = new StringBuilder(sendMe.substring(0, 1900)).append("...");
             }
             if (!sendMe.toString().endsWith("\n")) {
                 sendMe.append("\n");
             }
-            sendMe.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getPageId());
+            sendMe.append("Read more at: https://en.wikipedia.org/?curid=").append(firstTopic.getPageId());
             event.getChannel().sendMessage(sendMe).queue();
         }
     }

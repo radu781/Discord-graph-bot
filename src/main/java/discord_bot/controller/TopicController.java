@@ -1,5 +1,6 @@
 package discord_bot.controller;
 
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,11 @@ public class TopicController {
 
     @GetMapping("/search")
     public ResponseEntity<Topic> getInfo(@RequestParam("q") String query, @RequestParam("index") int index) {
-        Topic myModel = topicModel.searchPages(query);
-        if (myModel == null) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
+        Topic myModel;
+        try {
+            myModel = topicModel.searchPages(query).get(0);
+        } catch (ParseException e) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         }
         return ResponseEntity.status(HttpStatus.OK).body(myModel);
     }

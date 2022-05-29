@@ -25,78 +25,68 @@ import discord_bot.view.Topic;
 @Service
 public class TopicModel {
     private final String LINK = "https://en.wikipedia.org/w/api.php?";
-    private List<String> results = new ArrayList<>();
-    private int currentIndex = 0;
 
-    public Topic searchPages(String query) {
-        if (!results.isEmpty()) {
-            if (currentIndex == results.size()) {
-                currentIndex = 0;
-            }
-            return searchInner(results.get(currentIndex++));
-        }
+    public Topic searchResultByIndex(String query, int index) throws ParseException {
+        return searchPages(query).get(index);
+    }
 
+    public List<Topic> searchPages(String query) throws ParseException {
         HashMap<String, String> params = new HashMap<>();
         params.put("action", "query");
         params.put("origin", "*");
         params.put("format", "json");
         params.put("generator", "search");
         params.put("gsrnamespace", "0");
-        params.put("gsrlimit", "50");
+        params.put("gsrlimit", "5");
         params.put("gsrsearch", query);
-        Topic out = new Topic();
         String response = executeRequest(ParamBuilder.build(params), "GET");
         JSONParser parser = new JSONParser();
         Object obj = null;
-        try {
-            obj = parser.parse(response);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return out;
-        }
+        obj = parser.parse(response);
+
         JSONObject pages = null;
         try {
             pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
         } catch (NullPointerException e) {
-            e.printStackTrace();
-            currentIndex = results.size();
-            return null;
+            throw new ParseException(1);
         }
+        List<String> results = new ArrayList<>();
         for (Object page : pages.entrySet()) {
             String key = ((Map.Entry<String, Object>) page).getKey();
             JSONObject content = (JSONObject) (pages.get(key));
             results.add(content.get("title").toString());
         }
-        return searchInner(results.get(currentIndex++));
+        return searchTitle(results);
     }
 
-    private Topic searchInner(String query) {
+    private List<Topic> searchTitle(List<String> allQueries) throws ParseException {
+        List<Topic> out = new ArrayList<>();
         HashMap<String, String> params = new HashMap<>();
         params.put("action", "query");
         params.put("prop", "extracts");
         params.put("exintro", "");
         params.put("explaintext", "");
         params.put("format", "json");
-        params.put("titles", query);
-        String response = executeRequest(ParamBuilder.build(params), "GET");
-        Topic out = new Topic();
 
-        JSONParser parser = new JSONParser();
-        Object obj = null;
-        try {
+        for (String query : allQueries) {
+            params.put("titles", query);
+            String response = executeRequest(ParamBuilder.build(params), "GET");
+
+            JSONParser parser = new JSONParser();
+            Object obj = null;
             obj = parser.parse(response);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return out;
-        }
-        JSONObject pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
-        for (Object page : pages.entrySet()) {
-            String key = ((Map.Entry<String, Object>) page).getKey();
-            JSONObject content = (JSONObject) (pages.get(key));
-            out.setTitle(content.get("title").toString());
-            out.setContent(content.get("extract").toString());
-            out.setPageId(Integer.parseInt(content.get("pageid").toString()));
-            break;
+            JSONObject pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
+
+            Topic currentTopic = new Topic();
+            for (Object page : pages.entrySet()) {
+                String key = ((Map.Entry<String, Object>) page).getKey();
+                JSONObject content = (JSONObject) (pages.get(key));
+                currentTopic.setTitle(content.get("title").toString());
+                currentTopic.setContent(content.get("extract").toString());
+                currentTopic.setPageId(Integer.parseInt(content.get("pageid").toString()));
+                out.add(currentTopic);
+                break;
+            }
         }
         return out;
     }
@@ -147,8 +137,7 @@ public class TopicModel {
             }
             return response.toString();
         } catch (IOException e) {
-            e.printStackTrace();
-            return "Request failed";
+            return e.getMessage();
         }
     }
 }

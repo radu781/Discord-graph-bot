@@ -2,6 +2,8 @@ package discord_bot.listeners;
 
 import java.util.HashMap;
 
+import org.json.simple.parser.ParseException;
+
 import discord_bot.model.TopicModel;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -21,7 +23,13 @@ public class MessageListener extends ListenerAdapter {
             if (option == null) {
                 return;
             }
-            Topic topic = topicModel.searchPages(option.getAsString());
+            Topic topic;
+            try {
+                topic = topicModel.searchResultByIndex(option.getAsString(), 0);
+            } catch (ParseException e) {
+                event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
+                return;
+            }
             event.getHook().sendMessage(formatResponse(topic)).queue();
         }
     }
