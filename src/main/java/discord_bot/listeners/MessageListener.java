@@ -4,41 +4,42 @@ import java.util.HashMap;
 
 import discord_bot.model.TopicModel;
 import discord_bot.view.Topic;
-import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 public class MessageListener extends ListenerAdapter {
     private TopicModel topicModel = new TopicModel();
+    private static final int DISCORD_MAX_MESSAGE_LEN = 2000;
     private HashMap<Long, String> messages;
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isFromType(ChannelType.TEXT)) {
-            String input = event.getMessage().getContentDisplay();
-            if (input.startsWith("/search")) {
-                String searchMe = input.substring("/search".length()+1);
-                messages.put(event.getMessageIdLong(), searchMe);
-                StringBuilder sendMe = new StringBuilder();
-                Topic topic = topicModel.search(searchMe);
-                sendMe.append("**").append(topic.getTitle()).append("**")
-                        .append("\n").append(topic.getContent());
-                if (sendMe.length() > 2000) {
-                    sendMe = new StringBuilder(sendMe.substring(0, 1900)).append("...");
-                }
-                if (!sendMe.toString().endsWith("\n")) {
-                    sendMe.append("\n");
-                }
-                sendMe.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getPageId());
-                event.getChannel().sendMessage(sendMe).queue();
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        if (event.getName().equals("search")) {
+            event.deferReply().queue();
+            OptionMapping option = event.getOption("query");
+            if (option == null) {
+                return;
             }
+            Topic topic = topicModel.searchPages(option.getAsString());
+            event.getHook().sendMessage(formatResponse(topic)).queue();
         }
     }
 
-    @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        System.out.println("MessageListener.onSlashCommandInteraction()");
+    private String formatResponse(Topic topic) {
+        StringBuilder out = new StringBuilder();
+
+        out.append("**").append(topic.getTitle()).append("**")
+                .append("\n").append(topic.getContent());
+        if (out.length() > DISCORD_MAX_MESSAGE_LEN) {
+            out = new StringBuilder(out.substring(0, DISCORD_MAX_MESSAGE_LEN - 100)).append(" ...");
+        }
+        if (!out.toString().endsWith("\n")) {
+            out.append("\n");
+        }
+        out.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getPageId());
+
+        return out.toString();
     }
 
     public MessageListener(HashMap<Long, String> messages) {

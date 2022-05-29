@@ -28,7 +28,7 @@ public class TopicModel {
     private List<String> results = new ArrayList<>();
     private int currentIndex = 0;
 
-    public Topic search(String query) {
+    public Topic searchPages(String query) {
         if (!results.isEmpty()) {
             if (currentIndex == results.size()) {
                 currentIndex = 0;

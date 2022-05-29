@@ -16,7 +16,7 @@ public class ReactionListener extends ListenerAdapter {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.getReaction().isSelf()) {
             StringBuilder sendMe = new StringBuilder();
-            Topic topic = topicModel.search(messages.get(event.getMessageIdLong()));
+            Topic topic = topicModel.searchPages(messages.get(event.getMessageIdLong()));
             sendMe.append("**").append(topic.getTitle()).append("**")
                     .append("\n").append(topic.getContent());
             if (sendMe.length() > 2000) {
