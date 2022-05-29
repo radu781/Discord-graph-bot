@@ -9,7 +9,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.json.simple.JSONObject;
@@ -25,6 +27,35 @@ public class TopicModel {
     private final String LINK = "https://en.wikipedia.org/w/api.php?";
 
     public Topic search(String query) {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("action", "query");
+        params.put("origin", "*");
+        params.put("format", "json");
+        params.put("generator", "search");
+        params.put("gsrnamespace", "0");
+        params.put("gsrlimit", "5");
+        params.put("gsrsearch", query);
+        Topic out = new Topic();
+        String response = executeRequest(ParamBuilder.build(params), "GET");
+        JSONParser parser = new JSONParser();
+        Object obj = null;
+        try {
+            obj = parser.parse(response);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return out;
+        }
+        List<String> results = new ArrayList<>();
+        JSONObject pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
+        for (Object page : pages.entrySet()) {
+            String key = ((Map.Entry<String, Object>) page).getKey();
+            JSONObject content = (JSONObject) (pages.get(key));
+            results.add(content.get("title").toString());
+        }
+        return searchInner(results.get(0));
+    }
+
+    private Topic searchInner(String query) {
         HashMap<String, String> params = new HashMap<>();
         params.put("action", "query");
         params.put("prop", "extracts");

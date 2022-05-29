@@ -20,9 +20,12 @@ public class MessageListener extends ListenerAdapter {
                 sendMe.append("**").append(topic.getTitle()).append("**")
                         .append("\n").append(topic.getContent());
                 if (sendMe.length() > 2000) {
-                    sendMe = new StringBuilder(sendMe.substring(0, 1900));
+                    sendMe = new StringBuilder(sendMe.substring(0, 1900)).append("...");
                 }
-                sendMe.append("\nRead more at: https://en.wikipedia.org/?curid=").append(topic.getPageId());
+                if (!sendMe.toString().endsWith("\n")) {
+                    sendMe.append("\n");
+                }
+                sendMe.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getPageId());
                 event.getChannel().sendMessage(sendMe).queue();
             }
         }
