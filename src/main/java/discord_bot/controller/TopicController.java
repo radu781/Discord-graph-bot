@@ -16,8 +16,14 @@ public class TopicController {
     private TopicModel topicModel;
 
     @GetMapping("/search")
-    public ResponseEntity<Topic> getInfo(@RequestParam("q") String query) {
+    public ResponseEntity<Topic> getInfo(@RequestParam("q") String query, @RequestParam("index") int index) {
         Topic myModel = topicModel.search(query);
+        for (int count = 0; count < index - 1; count++) {
+            if (myModel == null) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
+            }
+            myModel = topicModel.search(query);
+        }
         return ResponseEntity.status(HttpStatus.OK).body(myModel);
     }
 }

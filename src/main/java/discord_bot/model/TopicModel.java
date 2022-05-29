@@ -25,15 +25,24 @@ import discord_bot.view.Topic;
 @Service
 public class TopicModel {
     private final String LINK = "https://en.wikipedia.org/w/api.php?";
+    private List<String> results = new ArrayList<>();
+    private int currentIndex = 0;
 
     public Topic search(String query) {
+        if (!results.isEmpty()) {
+            if (currentIndex == results.size()) {
+                currentIndex = 0;
+            }
+            return searchInner(results.get(currentIndex++));
+        }
+
         HashMap<String, String> params = new HashMap<>();
         params.put("action", "query");
         params.put("origin", "*");
         params.put("format", "json");
         params.put("generator", "search");
         params.put("gsrnamespace", "0");
-        params.put("gsrlimit", "5");
+        params.put("gsrlimit", "50");
         params.put("gsrsearch", query);
         Topic out = new Topic();
         String response = executeRequest(ParamBuilder.build(params), "GET");
@@ -45,14 +54,20 @@ public class TopicModel {
             e.printStackTrace();
             return out;
         }
-        List<String> results = new ArrayList<>();
-        JSONObject pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
+        JSONObject pages = null;
+        try {
+            pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            currentIndex = results.size();
+            return null;
+        }
         for (Object page : pages.entrySet()) {
             String key = ((Map.Entry<String, Object>) page).getKey();
             JSONObject content = (JSONObject) (pages.get(key));
             results.add(content.get("title").toString());
         }
-        return searchInner(results.get(0));
+        return searchInner(results.get(currentIndex++));
     }
 
     private Topic searchInner(String query) {
