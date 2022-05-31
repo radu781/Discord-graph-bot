@@ -1,10 +1,7 @@
-package discord_bot.listeners;
-
-import java.util.HashMap;
-
-import org.json.simple.parser.ParseException;
+package discord_bot.controller.listeners;
 
 import discord_bot.model.TopicModel;
+import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -13,7 +10,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 public class MessageListener extends ListenerAdapter {
     private TopicModel topicModel = new TopicModel();
     private static final int DISCORD_MAX_MESSAGE_LEN = 2000;
-    private HashMap<Long, String> messages;
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
@@ -26,7 +22,7 @@ public class MessageListener extends ListenerAdapter {
             Topic topic;
             try {
                 topic = topicModel.searchResultByIndex(option.getAsString(), 0);
-            } catch (ParseException e) {
+            } catch (JSONParseException e) {
                 event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
                 return;
             }
@@ -48,9 +44,5 @@ public class MessageListener extends ListenerAdapter {
         out.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getPageId());
 
         return out.toString();
-    }
-
-    public MessageListener(HashMap<Long, String> messages) {
-        this.messages = messages;
     }
 }
