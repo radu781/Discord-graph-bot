@@ -20,7 +20,7 @@ public class TopicController {
     public ResponseEntity<Topic> getInfo(@RequestParam("q") String query, @RequestParam("index") int index) {
         Topic myModel;
         try {
-            myModel = topicModel.searchPages(query).get(0);
+            myModel = topicModel.searchResultByIndex(query, 0);
         } catch (JSONParseException e) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         }
