@@ -6,7 +6,9 @@ import org.json.simple.JSONObject;
 import discord_bot.utils.exceptions.JSONParseException;
 
 public interface Searcher {
-    public abstract JSONObject searchPages(String query) throws JSONParseException;
+    public void setSite(String site);
 
-    public abstract List<JSONObject> searchTitle(List<String> allQueries) throws JSONParseException;
+    public JSONObject searchPages(String query) throws JSONParseException;
+
+    public List<JSONObject> searchTitle(List<String> allQueries) throws JSONParseException;
 }

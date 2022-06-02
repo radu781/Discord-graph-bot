@@ -1,31 +1,67 @@
 package discord_bot.controller.listeners;
 
 import discord_bot.model.TopicModel;
+import discord_bot.model.searcher.Searcher;
+import discord_bot.model.searcher.StackExchangeSearcher;
+import discord_bot.model.searcher.WikipediaSearcher;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 public class MessageListener extends ListenerAdapterImpl {
-    private TopicModel topicModel = new TopicModel();
+    private TopicModel topicModel;
+    private Searcher searcher;
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        if (event.getName().equals("search")) {
-            event.deferReply().queue();
-            OptionMapping option = event.getOption("query");
-            if (option == null) {
-                event.getHook().sendMessage("Unexpected error").queue();
-                return;
-            }
-            Topic topic;
-            try {
-                topic = topicModel.searchResultByIndex(option.getAsString(), 0);
-            } catch (JSONParseException e) {
-                event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
-                return;
-            }
-            event.getHook().sendMessage(formatResponse(topic)).queue();
+        switch (event.getName()) {
+            case "search-wiki":
+                event.deferReply().queue();
+                OptionMapping option = event.getOption("query");
+                if (option == null) {
+                    event.getHook().sendMessage("Unexpected error").queue();
+                    return;
+                }
+                searcher = new WikipediaSearcher();
+                topicModel = new TopicModel();
+                topicModel.setSearcher(searcher);
+
+                getData(event, option.getAsString());
+                break;
+
+            case "search-stack":
+                event.deferReply().queue();
+                OptionMapping query = event.getOption("query");
+                OptionMapping source = event.getOption("source");
+                if (query == null || source == null) {
+                    event.getHook().sendMessage("Unexpected error").queue();
+                    return;
+                }
+                searcher = new StackExchangeSearcher();
+                searcher.setSite(source.getAsString());
+                topicModel = new TopicModel();
+                topicModel.setSearcher(searcher);
+
+                getData(event, query.getAsString());
+                break;
+
+            default:
+                event.deferReply().queue();
+                event.getHook().sendMessage("This command was removed, wait for it to disappear from Discord UI")
+                        .queue();
+                break;
         }
+    }
+
+    private void getData(SlashCommandInteractionEvent event, String query) {
+        Topic topic;
+        try {
+            topic = topicModel.searchResultByIndex(query, 0);
+        } catch (JSONParseException e) {
+            event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
+            return;
+        }
+        event.getHook().sendMessage(formatResponse(topic)).queue();
     }
 }

@@ -31,7 +31,7 @@ public class Requester {
     }
 
     public static String executeRequest(String link, String urlParameters, Type type) {
-        HttpURLConnection connection = null;
+        System.out.println("executeRequest() " + type + " " + link + urlParameters);
         URL url = null;
         try {
             url = new URL(link);
@@ -39,6 +39,7 @@ public class Requester {
             e.printStackTrace();
             return "Request failed";
         }
+        HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) url.openConnection();
         } catch (IOException e) {

@@ -8,13 +8,16 @@ import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 
 import discord_bot.model.searcher.Searcher;
-import discord_bot.model.searcher.WikipediaSearcher;
 import discord_bot.view.Topic;
 import discord_bot.utils.exceptions.JSONParseException;
 
 @Service
 public class TopicModel {
-    private Searcher searcher = new WikipediaSearcher();
+    private Searcher searcher;
+
+    public void setSearcher(Searcher searcher) {
+        this.searcher = searcher;
+    }
 
     public Topic searchResultByIndex(String query, int index) throws JSONParseException {
         List<String> searchTitles = new ArrayList<>();

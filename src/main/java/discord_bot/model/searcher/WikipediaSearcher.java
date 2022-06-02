@@ -13,7 +13,11 @@ import discord_bot.utils.Requester.Type;
 import discord_bot.utils.exceptions.JSONParseException;
 
 public class WikipediaSearcher implements Searcher {
-    private final String LINK = "https://en.wikipedia.org/w/api.php?";
+    private static final String LINK = "https://en.wikipedia.org/w/api.php?";
+
+    @Override
+    public void setSite(String site) {
+    }
 
     @Override
     public JSONObject searchPages(String query) throws JSONParseException {
