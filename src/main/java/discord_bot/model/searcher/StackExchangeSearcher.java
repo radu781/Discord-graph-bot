@@ -10,6 +10,7 @@ import org.json.simple.parser.ParseException;
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
 import discord_bot.utils.exceptions.JSONParseException;
+import discord_bot.view.Topic;
 
 public class StackExchangeSearcher implements Searcher {
     private static final String LINK = "https://api.stackexchange.com/2.3/search/advanced?";
@@ -44,7 +45,7 @@ public class StackExchangeSearcher implements Searcher {
     }
 
     @Override
-    public List<JSONObject> searchTitle(List<String> allQueries) throws JSONParseException {
+    public List<JSONObject> searchTitle(List<Topic> allQueries) throws JSONParseException {
         return null;
     }
 }

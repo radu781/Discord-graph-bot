@@ -57,7 +57,7 @@ public class MessageListener extends ListenerAdapterImpl {
     private void getData(SlashCommandInteractionEvent event, String query) {
         Topic topic;
         try {
-            topic = topicModel.searchResultByIndex(query, 0);
+            topic = topicModel.searchResultByIndex(query, 0, false);
         } catch (JSONParseException e) {
             event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
             return;

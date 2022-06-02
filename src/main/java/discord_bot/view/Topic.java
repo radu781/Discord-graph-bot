@@ -1,9 +1,9 @@
 package discord_bot.view;
 
 public class Topic {
-    private String title;
-    private String content;
-    private int pageId;
+    private String title = "not found";
+    private String content = "not found";
+    private int pageId = -1;
 
     public void setTitle(String title) {
         this.title = title;

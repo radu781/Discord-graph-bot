@@ -11,6 +11,7 @@ import org.json.simple.parser.ParseException;
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
 import discord_bot.utils.exceptions.JSONParseException;
+import discord_bot.view.Topic;
 
 public class WikipediaSearcher implements Searcher {
     private static final String LINK = "https://en.wikipedia.org/w/api.php?";
@@ -27,7 +28,7 @@ public class WikipediaSearcher implements Searcher {
         params.put("format", "json");
         params.put("generator", "search");
         params.put("gsrnamespace", "0");
-        params.put("gsrlimit", "1");
+        params.put("gsrlimit", "5");
         params.put("gsrsearch", query);
         String response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
         JSONParser parser = new JSONParser();
@@ -48,7 +49,7 @@ public class WikipediaSearcher implements Searcher {
     }
 
     @Override
-    public List<JSONObject> searchTitle(List<String> allQueries) throws JSONParseException {
+    public List<JSONObject> searchTitle(List<Topic> allQueries) throws JSONParseException {
         List<JSONObject> out = new ArrayList<>();
         HashMap<String, String> params = new HashMap<>();
         params.put("action", "query");
@@ -57,8 +58,8 @@ public class WikipediaSearcher implements Searcher {
         params.put("explaintext", "");
         params.put("format", "json");
 
-        for (String query : allQueries) {
-            params.put("titles", query);
+        for (Topic topic : allQueries) {
+            params.put("titles", topic.getTitle());
             String response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
 
             JSONParser parser = new JSONParser();
