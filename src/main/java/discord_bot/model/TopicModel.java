@@ -24,10 +24,10 @@ public class TopicModel {
     public Topic searchResultByIndex(String query, int index, boolean readOnly)
             throws JSONParseException, ArrayIndexOutOfBoundsException {
         List<String> dbTopics = topicDAO.getRelevantTitles(query);
-        if (index < 0 || index >= dbTopics.size()) {
-            throw new ArrayIndexOutOfBoundsException(Integer.toString(dbTopics.size()));
-        }
         if (!dbTopics.isEmpty()) {
+            if (index < 0 || index >= dbTopics.size()) {
+                throw new ArrayIndexOutOfBoundsException(Integer.toString(dbTopics.size()));
+            }
             String title = dbTopics.get(index);
             Topic result = topicDAO.getTopic(title);
             if (result != null) {

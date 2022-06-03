@@ -4,6 +4,7 @@ import discord_bot.model.TopicModel;
 import discord_bot.model.searcher.Searcher;
 import discord_bot.model.searcher.StackExchangeSearcher;
 import discord_bot.model.searcher.WikipediaSearcher;
+import discord_bot.utils.database.TopicDAO;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 public class MessageListener extends ListenerAdapterImpl {
     private TopicModel topicModel;
+    private final TopicDAO topicDAO = new TopicDAO();
     private Searcher searcher;
 
     @Override
@@ -62,6 +64,9 @@ public class MessageListener extends ListenerAdapterImpl {
             event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
             return;
         }
-        event.getHook().sendMessage(formatResponse(topic)).queue();
+        event.getHook().sendMessage(formatResponse(topic)).queue((message) -> {
+            long replyId = event.getHook().getInteraction().getMessageChannel().getLatestMessageIdLong();
+            topicDAO.insertMessage(topic, replyId, query);
+        });
     }
 }

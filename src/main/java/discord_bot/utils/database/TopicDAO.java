@@ -80,4 +80,67 @@ public class TopicDAO {
             e.printStackTrace();
         }
     }
+
+    public void insertMessage(Topic topic, long messageId, String userPrompt) {
+        final String TABLE_NAME = "messages";
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "insert into " + TABLE_NAME + "(messageid, pageid, user_prompt) values(?, ?, ?)");
+            statement.setLong(1, messageId);
+            statement.setInt(2, topic.getPageId());
+            statement.setString(3, userPrompt);
+            statement.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getUserPrompt(long messageId) {
+        final String TABLE_NAME = "messages";
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "select user_prompt from " + TABLE_NAME + " where messageid = ?");
+            statement.setLong(1, messageId);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return result.getString("user_prompt");
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public int getPromptIndex(long messageId) {
+        final String TABLE_NAME = "messages";
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "select current_index from " + TABLE_NAME + " where messageid = ?");
+            statement.setLong(1, messageId);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return result.getInt("current_index");
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public void incrementIndex(long messageId) {
+        final String TABLE_NAME = "messages";
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "update " + TABLE_NAME + " set current_index = current_index + 1 where messageid = ?");
+            statement.setLong(1, messageId);
+            System.out.println(statement.toString());
+            statement.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
