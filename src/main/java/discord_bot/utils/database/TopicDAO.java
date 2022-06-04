@@ -14,11 +14,10 @@ public class TopicDAO {
     private Connection connection = DatabaseManager.getInstance().getConnection();
 
     public List<String> getRelevantTitles(String userPrompt) {
-        final String TABLE_NAME = "wikipedia_pages";
         List<String> out = new ArrayList<>();
         try {
             PreparedStatement statement = connection
-                    .prepareStatement("select title from " + TABLE_NAME + " where user_prompt = ?");
+                    .prepareStatement("SELECT title FROM wikipedia_pages WHERE user_prompt = ?");
             statement.setString(1, userPrompt);
             ResultSet result = statement.executeQuery();
             while (result.next()) {
@@ -32,10 +31,9 @@ public class TopicDAO {
     }
 
     public Topic getTopic(String title) {
-        final String TABLE_NAME = "wikipedia_articles";
         try {
             PreparedStatement statement = connection
-                    .prepareStatement("select * from " + TABLE_NAME + " where title = ?");
+                    .prepareStatement("SELECT * FROM wikipedia_articles WHERE title = ?");
             statement.setString(1, title);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
@@ -53,10 +51,9 @@ public class TopicDAO {
     }
 
     public void insertPage(String userPrompt, String title) {
-        final String TABLE_NAME = "wikipedia_pages";
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "insert into " + TABLE_NAME + "(user_prompt, title) values(?, ?)");
+                    "INSERT INTO wikipedia_pages (user_prompt, title) VALUES(?, ?)");
             statement.setString(1, userPrompt);
             statement.setString(2, title);
             statement.executeUpdate();
@@ -67,10 +64,9 @@ public class TopicDAO {
     }
 
     public void insertArticle(Topic topic) {
-        final String TABLE_NAME = "wikipedia_articles";
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "insert into " + TABLE_NAME + "(pageid, title, content) values(?, ?, ?)");
+                    "INSERT INTO wikipedia_articles (pageid, title, content) VALUES(?, ?, ?)");
             statement.setInt(1, topic.getPageId());
             statement.setString(2, topic.getTitle());
             statement.setString(3, topic.getContent());
@@ -82,10 +78,9 @@ public class TopicDAO {
     }
 
     public void insertMessage(Topic topic, long messageId, String userPrompt) {
-        final String TABLE_NAME = "messages";
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "insert into " + TABLE_NAME + "(messageid, pageid, user_prompt) values(?, ?, ?)");
+                    "INSERT INTO messages (messageid, pageid, user_prompt) VALUES(?, ?, ?)");
             statement.setLong(1, messageId);
             statement.setInt(2, topic.getPageId());
             statement.setString(3, userPrompt);
@@ -97,10 +92,9 @@ public class TopicDAO {
     }
 
     public String getUserPrompt(long messageId) {
-        final String TABLE_NAME = "messages";
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "select user_prompt from " + TABLE_NAME + " where messageid = ?");
+                    "SELECT user_prompt FROM messages WHERE messageid = ?");
             statement.setLong(1, messageId);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
@@ -114,10 +108,9 @@ public class TopicDAO {
     }
 
     public int getPromptIndex(long messageId) {
-        final String TABLE_NAME = "messages";
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "select current_index from " + TABLE_NAME + " where messageid = ?");
+                    "SELECT current_index FROM messages WHERE messageid = ?");
             statement.setLong(1, messageId);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
@@ -130,12 +123,13 @@ public class TopicDAO {
         return -1;
     }
 
-    public void incrementIndex(long messageId) {
-        final String TABLE_NAME = "messages";
+    public void incrementIndexBy(long messageId, int count) {
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "update " + TABLE_NAME + " set current_index = current_index + 1 where messageid = ?");
-            statement.setLong(1, messageId);
+                    "UPDATE messages SET current_index = MOD(current_index + ? + @count_number := (SELECT count(*) FROM (SELECT * FROM messages) AS msg JOIN wikipedia_pages AS wp ON msg.user_prompt = wp.user_prompt AND msg.messageid = ? GROUP BY msg.user_prompt), @count_number) WHERE messageid = ?");
+            statement.setInt(1, count);
+            statement.setLong(2, messageId);
+            statement.setLong(3, messageId);
             System.out.println(statement.toString());
             statement.executeUpdate();
         } catch (SQLIntegrityConstraintViolationException e) {

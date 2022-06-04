@@ -7,6 +7,7 @@ import discord_bot.model.searcher.WikipediaSearcher;
 import discord_bot.utils.database.TopicDAO;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
@@ -67,6 +68,9 @@ public class MessageListener extends ListenerAdapterImpl {
         event.getHook().sendMessage(formatResponse(topic)).queue((message) -> {
             long replyId = event.getHook().getInteraction().getMessageChannel().getLatestMessageIdLong();
             topicDAO.insertMessage(topic, replyId, query);
+            MessageChannel channel = event.getChannel();
+            channel.addReactionById(replyId, "◀️").queue();
+            channel.addReactionById(replyId, "▶️").queue();
         });
     }
 }

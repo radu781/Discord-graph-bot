@@ -2,7 +2,6 @@ package discord_bot.controller.listeners;
 
 import java.util.List;
 
-
 import discord_bot.utils.database.TopicDAO;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.entities.MessageChannel;
@@ -15,13 +14,18 @@ public class ReactionListener extends ListenerAdapterImpl {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.getReaction().isSelf()) {
             long messageId = event.getReaction().getMessageIdLong();
+
+            var a = event.getReactionEmote().getName();
+            MessageChannel channel1 = event.getChannel();
+            channel1.addReactionById(messageId, a).queue();
+
             int index = topicDAO.getPromptIndex(messageId);
             if (index == -1) {
                 return;
             }
             String userPrompt = topicDAO.getUserPrompt(messageId);
             List<String> topics = topicDAO.getRelevantTitles(userPrompt);
-            topicDAO.incrementIndex(messageId);
+            topicDAO.incrementIndexBy(messageId, 1);
             Topic topic = topicDAO.getTopic(topics.get(index));
 
             MessageChannel channel = event.getChannel();
