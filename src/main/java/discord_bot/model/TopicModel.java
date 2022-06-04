@@ -1,8 +1,6 @@
 package discord_bot.model;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
@@ -15,13 +13,30 @@ import discord_bot.utils.exceptions.JSONParseException;
 @Service
 public class TopicModel {
     private Searcher searcher;
-    private TopicDAO topicDAO = new TopicDAO();
+    private TopicDAO topicDAO;
+    private boolean ignoreContent = false;
 
     public void setSearcher(Searcher searcher) {
         this.searcher = searcher;
     }
 
-    public Topic searchResultByIndex(String query, int index, boolean readOnly)
+    public void setTopicDAO(TopicDAO topicDAO) {
+        this.topicDAO = topicDAO;
+    }
+
+    public TopicDAO getTopicDAO() {
+        return topicDAO;
+    }
+
+    public void setIgnoreContent(boolean ignoreContent) {
+        this.ignoreContent = ignoreContent;
+    }
+
+    public boolean getIgnoreContent() {
+        return ignoreContent;
+    }
+
+    public Topic getResultByIndex(String query, int index, boolean readOnly)
             throws JSONParseException, ArrayIndexOutOfBoundsException {
         List<String> dbTopics = topicDAO.getRelevantTitles(query);
         if (!dbTopics.isEmpty()) {
@@ -36,55 +51,37 @@ public class TopicModel {
             }
         }
 
-        List<Topic> titles = searchTitles(query, readOnly);
-        List<Topic> topics = searchPages(titles, readOnly);
+        List<Topic> titles = getTitles(query, readOnly);
+        List<Topic> topics = getPages(titles, readOnly);
+        if (topics == null) {
+            ignoreContent = true;
+            return titles.get(index);
+        }
         return topics.get(index);
     }
 
-    private List<Topic> searchTitles(String query, boolean readOnly) throws JSONParseException {
-        List<Topic> searchTitles = new ArrayList<>();
+    private List<Topic> getTitles(String query, boolean readOnly) throws JSONParseException {
         JSONObject pages = searcher.searchPages(query);
-        for (Object page : pages.entrySet()) {
-            String key = ((Map.Entry<String, Object>) page).getKey();
-            Topic currentTopic = new Topic();
-            JSONObject content = (JSONObject) (pages.get(key));
-            currentTopic.setTitle(content.get("title").toString());
-            currentTopic.setPageId(Integer.parseInt(content.get("pageid").toString()));
-            searchTitles.add(currentTopic);
+        List<Topic> topicTitles = searcher.unpackPages(pages);
+        for (Topic topic : topicTitles) {
             if (!readOnly) {
-                topicDAO.insertPage(query, currentTopic.getTitle());
+                topicDAO.insertPage(query, topic.getTitle());
             }
         }
-        return searchTitles;
+        return topicTitles;
     }
 
-    private List<Topic> searchPages(List<Topic> searchTitles, boolean readOnly) throws JSONParseException {
-        List<Topic> topics = new ArrayList<>();
+    private List<Topic> getPages(List<Topic> searchTitles, boolean readOnly) throws JSONParseException {
         List<JSONObject> mainPages = searcher.searchTitle(searchTitles);
-        for (JSONObject object : mainPages) {
-            for (Object page : object.entrySet()) {
-                String key = ((Map.Entry<String, Object>) page).getKey();
-                JSONObject content = (JSONObject) (object.get(key));
-
-                try {
-                    Topic currentTopic = new Topic();
-                    currentTopic.setTitle(content.get("title").toString());
-                    currentTopic.setContent(formatString(content.get("extract").toString()));
-                    currentTopic.setPageId(Integer.parseInt(content.get("pageid").toString()));
-                    topics.add(currentTopic);
-                    if (!readOnly) {
-                        topicDAO.insertArticle(currentTopic);
-                    }
-                } catch (NullPointerException e) {
-                }
-
-                break;
+        List<Topic> topicTitles = searcher.unpackTitles(mainPages);
+        if (topicTitles == null) {
+            return null;
+        }
+        for (Topic topic : topicTitles) {
+            if (!readOnly) {
+                topicDAO.insertArticle(topic);
             }
         }
-        return topics;
-    }
-
-    private String formatString(String str) {
-        return str.replaceAll("\n\s*\n", "").replaceAll("\s+", " ");
+        return topicTitles;
     }
 }

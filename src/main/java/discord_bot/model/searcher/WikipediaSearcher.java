@@ -3,10 +3,9 @@ package discord_bot.model.searcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
@@ -30,18 +29,11 @@ public class WikipediaSearcher implements Searcher {
         params.put("gsrnamespace", "0");
         params.put("gsrlimit", "5");
         params.put("gsrsearch", query);
-        String response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
-        JSONParser parser = new JSONParser();
-        Object obj = null;
-        try {
-            obj = parser.parse(response);
-        } catch (ParseException e) {
-            throw new JSONParseException(response);
-        }
+        JSONObject response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
 
         JSONObject pages = null;
         try {
-            pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
+            pages = (JSONObject) ((JSONObject) ((JSONObject) response).get("query")).get("pages");
         } catch (NullPointerException e) {
             throw new JSONParseException(e.getMessage());
         }
@@ -60,18 +52,47 @@ public class WikipediaSearcher implements Searcher {
 
         for (Topic topic : allQueries) {
             params.put("titles", topic.getTitle());
-            String response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
-
-            JSONParser parser = new JSONParser();
-            Object obj = null;
-            try {
-                obj = parser.parse(response);
-            } catch (ParseException e) {
-                throw new JSONParseException(response);
-            }
-            JSONObject pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("query")).get("pages");
+            JSONObject response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
+            JSONObject pages = (JSONObject) ((JSONObject) ((JSONObject) response).get("query")).get("pages");
             out.add(pages);
         }
         return out;
+    }
+
+    @Override
+    public List<Topic> unpackPages(JSONObject pages) {
+        List<Topic> searchTitles = new ArrayList<>();
+        for (Object page : pages.entrySet()) {
+            String key = ((Map.Entry<String, Object>) page).getKey();
+            Topic currentTopic = new Topic();
+            JSONObject content = (JSONObject) (pages.get(key));
+            currentTopic.setTitle(content.get("title").toString());
+            currentTopic.setId(Integer.parseInt(content.get("pageid").toString()));
+            searchTitles.add(currentTopic);
+        }
+        return searchTitles;
+    }
+
+    @Override
+    public List<Topic> unpackTitles(List<JSONObject> mainPages) {
+        List<Topic> topics = new ArrayList<>();
+        for (JSONObject object : mainPages) {
+            for (Object page : object.entrySet()) {
+                String key = ((Map.Entry<String, Object>) page).getKey();
+                JSONObject content = (JSONObject) (object.get(key));
+
+                try {
+                    Topic currentTopic = new Topic();
+                    currentTopic.setTitle(content.get("title").toString());
+                    currentTopic.setContent(formatString(content.get("extract").toString()));
+                    currentTopic.setId(Integer.parseInt(content.get("pageid").toString()));
+                    topics.add(currentTopic);
+                } catch (NullPointerException e) {
+                }
+
+                break;
+            }
+        }
+        return topics;
     }
 }

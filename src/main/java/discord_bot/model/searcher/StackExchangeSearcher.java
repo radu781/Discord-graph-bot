@@ -1,11 +1,11 @@
 package discord_bot.model.searcher;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
@@ -26,26 +26,40 @@ public class StackExchangeSearcher implements Searcher {
         params.put("order", "desc");
         params.put("site", site);
         params.put("q", query);
-        String response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
-        JSONParser parser = new JSONParser();
-        Object obj = null;
-        try {
-            obj = parser.parse(response);
-        } catch (ParseException e) {
-            throw new JSONParseException(response);
-        }
+        JSONObject response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
 
         JSONObject pages = null;
-        try {
-            pages = (JSONObject) ((JSONObject) ((JSONObject) obj).get("items")).get("title");
-        } catch (NullPointerException e) {
-            throw new JSONParseException(e.getMessage());
+        if (response != null) {
+            return response;
+        } else {
+            throw new JSONParseException("Got null response");
         }
-        return pages;
     }
 
     @Override
     public List<JSONObject> searchTitle(List<Topic> allQueries) throws JSONParseException {
+        return null;
+    }
+
+    @Override
+    public List<Topic> unpackPages(JSONObject pages) {
+        List<Topic> searchTitles = new ArrayList<>();
+        JSONArray items = (JSONArray) pages.get("items");
+        for (int i = 0; i < items.size(); i++) {
+            JSONObject obj = (JSONObject) items.get(i);
+            String title = (String) obj.get("title");
+            long questionId = (long) obj.get("question_id");
+
+            Topic topic = new Topic();
+            topic.setTitle(title);
+            topic.setId((int) questionId);
+            searchTitles.add(topic);
+        }
+        return searchTitles;
+    }
+
+    @Override
+    public List<Topic> unpackTitles(List<JSONObject> mainPages) {
         return null;
     }
 }

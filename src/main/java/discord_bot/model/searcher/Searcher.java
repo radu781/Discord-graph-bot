@@ -12,4 +12,12 @@ public interface Searcher {
     public JSONObject searchPages(String query) throws JSONParseException;
 
     public List<JSONObject> searchTitle(List<Topic> allQueries) throws JSONParseException;
+
+    public List<Topic> unpackPages(JSONObject pages);
+
+    public List<Topic> unpackTitles(List<JSONObject> mainPages);
+
+    default public String formatString(String str) {
+        return str.replaceAll("\n\s*\n", "").replaceAll("\s+", " ");
+    }
 }

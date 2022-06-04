@@ -2,7 +2,6 @@ package discord_bot.controller;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +18,6 @@ import discord_bot.view.Topic;
 
 @RestController
 public class TopicController {
-    @Autowired
     private TopicModel topicModel;
 
     @GetMapping("/search/wiki")
@@ -29,7 +27,7 @@ public class TopicController {
         Topic myModel = new Topic();
         topicModel.setSearcher(new WikipediaSearcher());
         try {
-            myModel = topicModel.searchResultByIndex(query, index, true);
+            myModel = topicModel.getResultByIndex(query, index, true);
         } catch (JSONParseException e) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -56,7 +54,7 @@ public class TopicController {
         searcher.setSite(source);
         topicModel.setSearcher(searcher);
         try {
-            myModel = topicModel.searchResultByIndex(query, index, true);
+            myModel = topicModel.getResultByIndex(query, index, true);
         } catch (JSONParseException e) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         } catch (ArrayIndexOutOfBoundsException e) {
