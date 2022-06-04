@@ -14,10 +14,16 @@ public class ReactionListener extends ListenerAdapterImpl {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.getReaction().isSelf()) {
             long messageId = event.getReaction().getMessageIdLong();
-
-            var a = event.getReactionEmote().getName();
-            MessageChannel channel1 = event.getChannel();
-            channel1.addReactionById(messageId, a).queue();
+            switch (event.getReactionEmote().getName()) {
+                case "◀️":
+                    topicDAO.incrementIndexBy(messageId, -1);
+                    break;
+                case "▶️":
+                    topicDAO.incrementIndexBy(messageId, 1);
+                    break;
+                default:
+                    return;
+            }
 
             int index = topicDAO.getPromptIndex(messageId);
             if (index == -1) {
@@ -25,7 +31,6 @@ public class ReactionListener extends ListenerAdapterImpl {
             }
             String userPrompt = topicDAO.getUserPrompt(messageId);
             List<String> topics = topicDAO.getRelevantTitles(userPrompt);
-            topicDAO.incrementIndexBy(messageId, 1);
             Topic topic = topicDAO.getTopic(topics.get(index));
 
             MessageChannel channel = event.getChannel();

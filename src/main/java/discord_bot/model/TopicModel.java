@@ -69,7 +69,7 @@ public class TopicModel {
                 try {
                     Topic currentTopic = new Topic();
                     currentTopic.setTitle(content.get("title").toString());
-                    currentTopic.setContent(content.get("extract").toString());
+                    currentTopic.setContent(formatString(content.get("extract").toString()));
                     currentTopic.setPageId(Integer.parseInt(content.get("pageid").toString()));
                     topics.add(currentTopic);
                     if (!readOnly) {
@@ -82,5 +82,9 @@ public class TopicModel {
             }
         }
         return topics;
+    }
+
+    private String formatString(String str) {
+        return str.replaceAll("\n\s*\n", "").replaceAll("\s+", " ");
     }
 }
