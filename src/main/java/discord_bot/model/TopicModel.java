@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import discord_bot.model.searcher.Searcher;
 import discord_bot.view.Topic;
 import discord_bot.utils.database.TopicDAO;
+import discord_bot.utils.enums.Table;
 import discord_bot.utils.exceptions.JSONParseException;
 
 @Service
@@ -36,7 +37,7 @@ public class TopicModel {
         return ignoreContent;
     }
 
-    public Topic getResultByIndex(String query, int index, boolean readOnly)
+    public Topic getResultByIndex(String query, int index, boolean readOnly, Table table)
             throws JSONParseException, ArrayIndexOutOfBoundsException {
         List<String> dbTopics = topicDAO.getRelevantTitles(query);
         if (!dbTopics.isEmpty()) {
@@ -44,14 +45,14 @@ public class TopicModel {
                 throw new ArrayIndexOutOfBoundsException(Integer.toString(dbTopics.size()));
             }
             String title = dbTopics.get(index);
-            Topic result = topicDAO.getTopic(title);
+            Topic result = topicDAO.getTopicByTitle(title);
             if (result != null) {
                 System.out.println("Query in database, skipping request");
                 return result;
             }
         }
 
-        List<Topic> titles = getTitles(query, readOnly);
+        List<Topic> titles = getTitles(query, readOnly, table);
         List<Topic> topics = getPages(titles, readOnly);
         if (topics == null) {
             ignoreContent = true;
@@ -60,12 +61,13 @@ public class TopicModel {
         return topics.get(index);
     }
 
-    private List<Topic> getTitles(String query, boolean readOnly) throws JSONParseException {
+    private List<Topic> getTitles(String query, boolean readOnly, Table table) throws JSONParseException {
         JSONObject pages = searcher.searchPages(query);
         List<Topic> topicTitles = searcher.unpackPages(pages);
-        for (Topic topic : topicTitles) {
-            if (!readOnly) {
-                topicDAO.insertPage(query, topic.getTitle());
+        if (!readOnly) {
+            for (Topic topic : topicTitles) {
+                topic.setSource(table);
+                topicDAO.insertPage(query, topic);
             }
         }
         return topicTitles;
@@ -77,8 +79,8 @@ public class TopicModel {
         if (topicTitles == null) {
             return null;
         }
-        for (Topic topic : topicTitles) {
-            if (!readOnly) {
+        if (!readOnly) {
+            for (Topic topic : topicTitles) {
                 topicDAO.insertArticle(topic);
             }
         }

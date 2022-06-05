@@ -9,11 +9,18 @@ import org.json.simple.JSONObject;
 
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
+import discord_bot.utils.enums.Table;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 
 public class WikipediaSearcher implements Searcher {
     private static final String LINK = "https://en.wikipedia.org/w/api.php?";
+    private Table table;
+
+    @Override
+    public void setType(Table table) {
+        this.table = table;
+    }
 
     @Override
     public void setSite(String site) {

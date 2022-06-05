@@ -5,7 +5,7 @@ import discord_bot.model.searcher.Searcher;
 import discord_bot.model.searcher.StackExchangeSearcher;
 import discord_bot.model.searcher.WikipediaSearcher;
 import discord_bot.utils.database.TopicDAO;
-import discord_bot.utils.database.TopicDAO.Table;
+import discord_bot.utils.enums.Table;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.entities.MessageChannel;
@@ -21,21 +21,22 @@ public class MessageListener extends ListenerAdapterImpl {
         switch (event.getName()) {
             case "search-wiki":
                 event.deferReply().queue();
-                topicModel.setTopicDAO(new TopicDAO(Table.WIKIPEDIA));
+                topicModel.setTopicDAO(new TopicDAO());
                 OptionMapping option = event.getOption("query");
                 if (option == null) {
                     event.getHook().sendMessage("Unexpected error").queue();
                     return;
                 }
                 searcher = new WikipediaSearcher();
+                searcher.setType(Table.WIKIPEDIA);
                 topicModel.setSearcher(searcher);
 
-                getData(event, option.getAsString());
+                getData(event, option.getAsString(), Table.WIKIPEDIA);
                 break;
 
             case "search-stack":
                 event.deferReply().queue();
-                topicModel.setTopicDAO(new TopicDAO(Table.STACKEXCHANGE));
+                topicModel.setTopicDAO(new TopicDAO());
                 topicModel.setIgnoreContent(true);
                 OptionMapping query = event.getOption("query");
                 OptionMapping source = event.getOption("source");
@@ -45,9 +46,10 @@ public class MessageListener extends ListenerAdapterImpl {
                 }
                 searcher = new StackExchangeSearcher();
                 searcher.setSite(source.getAsString());
+                searcher.setType(Table.STACKEXCHANGE);
                 topicModel.setSearcher(searcher);
 
-                getData(event, query.getAsString());
+                getData(event, query.getAsString(), Table.STACKEXCHANGE);
                 break;
 
             default:
@@ -58,16 +60,16 @@ public class MessageListener extends ListenerAdapterImpl {
         }
     }
 
-    private void getData(SlashCommandInteractionEvent event, String query) {
+    private void getData(SlashCommandInteractionEvent event, String query, Table table) {
         Topic topic;
         try {
-            topic = topicModel.getResultByIndex(query, 0, false);
+            topic = topicModel.getResultByIndex(query, 0, false, table);
         } catch (JSONParseException e) {
             event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
             return;
         }
         topic.setIgnoreContent(topicModel.getIgnoreContent());
-        topic.setSource(topicModel.getTopicDAO().getTABLE_NAME());
+        topic.setSource(table);
         event.getHook().sendMessage(formatResponse(topic)).queue((message) -> {
             long replyId = event.getHook().getInteraction().getMessageChannel().getLatestMessageIdLong();
             topicModel.getTopicDAO().insertMessage(topic, replyId, query);

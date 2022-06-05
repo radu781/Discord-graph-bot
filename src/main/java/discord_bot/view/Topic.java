@@ -1,11 +1,13 @@
 package discord_bot.view;
 
+import discord_bot.utils.enums.Table;
+
 public class Topic {
     private String title = "not found";
     private String content = "not found";
     private int id = -1;
     private boolean ignoreContent = false;
-    private String source;
+    private Table source = Table.UNKNOWN;
 
     public void setTitle(String title) {
         this.title = title;
@@ -39,11 +41,11 @@ public class Topic {
         return ignoreContent;
     }
 
-    public void setSource(String source) {
+    public void setSource(Table source) {
         this.source = source;
     }
 
-    public String getSource() {
+    public Table getSource() {
         return source;
     }
 }

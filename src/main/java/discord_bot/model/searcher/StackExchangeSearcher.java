@@ -9,12 +9,19 @@ import org.json.simple.JSONObject;
 
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
+import discord_bot.utils.enums.Table;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 
 public class StackExchangeSearcher implements Searcher {
     private static final String LINK = "https://api.stackexchange.com/2.3/search/advanced?";
     private String site;
+    private Table table;
+
+    @Override
+    public void setType(Table table) {
+        this.table = table;
+    }
 
     public void setSite(String site) {
         this.site = site;

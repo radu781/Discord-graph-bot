@@ -22,10 +22,10 @@ public class ListenerAdapterImpl extends ListenerAdapter {
             out.append("\n");
         }
         switch (topic.getSource()) {
-            case "wikipedia":
+            case WIKIPEDIA:
                 out.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getId());
                 break;
-            case "stackexchange":
+            case STACKEXCHANGE:
                 out.append("Read more at: https://en.wikipedia.org/?curid=").append(topic.getId());
             default:
                 break;

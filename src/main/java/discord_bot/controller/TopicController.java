@@ -12,6 +12,7 @@ import discord_bot.model.TopicModel;
 import discord_bot.model.searcher.Searcher;
 import discord_bot.model.searcher.StackExchangeSearcher;
 import discord_bot.model.searcher.WikipediaSearcher;
+import discord_bot.utils.enums.Table;
 import discord_bot.utils.exceptions.ControllerArgException;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
@@ -25,9 +26,11 @@ public class TopicController {
             @RequestParam("q") String query,
             @RequestParam("index") int index) {
         Topic myModel = new Topic();
-        topicModel.setSearcher(new WikipediaSearcher());
+        Searcher searcher = new WikipediaSearcher();
+        searcher.setType(Table.WIKIPEDIA);
+        topicModel.setSearcher(searcher);
         try {
-            myModel = topicModel.getResultByIndex(query, index, true);
+            myModel = topicModel.getResultByIndex(query, index, true, Table.WIKIPEDIA);
         } catch (JSONParseException e) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -52,9 +55,10 @@ public class TopicController {
 
         Searcher searcher = new StackExchangeSearcher();
         searcher.setSite(source);
+        searcher.setType(Table.STACKEXCHANGE);
         topicModel.setSearcher(searcher);
         try {
-            myModel = topicModel.getResultByIndex(query, index, true);
+            myModel = topicModel.getResultByIndex(query, index, true, Table.STACKEXCHANGE);
         } catch (JSONParseException e) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         } catch (ArrayIndexOutOfBoundsException e) {
