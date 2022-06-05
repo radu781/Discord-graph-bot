@@ -31,6 +31,10 @@ public class StackExchangeSearcher implements Searcher {
     public JSONObject searchPages(String query) throws JSONParseException {
         HashMap<String, String> params = new HashMap<>();
         params.put("order", "desc");
+        params.put("sort", "votes");
+        params.put("accepted", "True");
+        params.put("views", "20");
+        params.put("answers", "1");
         params.put("site", site);
         params.put("q", query);
         JSONObject response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);

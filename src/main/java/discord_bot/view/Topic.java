@@ -7,6 +7,8 @@ public class Topic {
     private String content = "";
     private int id = -1;
     private Table source = Table.UNKNOWN;
+    private int index;
+    private int totalMatches;
 
     public void setTitle(String title) {
         this.title = title;
@@ -38,5 +40,21 @@ public class Topic {
 
     public Table getSource() {
         return source;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setTotalMatches(int totalMatches) {
+        this.totalMatches = totalMatches;
+    }
+
+    public int getTotalMatches() {
+        return totalMatches;
     }
 }

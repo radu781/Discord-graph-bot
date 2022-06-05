@@ -55,10 +55,10 @@ public class TopicController {
 
         Searcher searcher = new StackExchangeSearcher();
         searcher.setSite(source);
-        searcher.setType(Table.STACKEXCHANGE);
+        searcher.setType(Table.fromString(source));
         topicModel.setSearcher(searcher);
         try {
-            myModel = topicModel.getResultByIndex(query, index, true, Table.STACKEXCHANGE);
+            myModel = topicModel.getResultByIndex(query, index, true, Table.fromString(source));
         } catch (JSONParseException e) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -69,8 +69,7 @@ public class TopicController {
     }
 
     private void parseStackInfo(String query, String source, int index) throws ControllerArgException {
-        String[] supportedStrings = new String[] { "stackoverflow", "mathoverflow.net" };
-        if (!Arrays.asList(supportedStrings).contains(source)) {
+        if (Table.fromString(source) == Table.UNKNOWN) {
             throw new ControllerArgException("Source not found");
         }
     }

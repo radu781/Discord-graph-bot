@@ -25,7 +25,7 @@ public class TopicDAO {
             while (result.next()) {
                 Topic topic = new Topic();
                 topic.setTitle(result.getString("title"));
-                topic.setSource(Table.UNKNOWN);
+                topic.setSource(table);
                 topic.setId(result.getInt("id"));
                 out.add(topic);
             }
@@ -39,7 +39,8 @@ public class TopicDAO {
     public Topic getTopicByTitle(String title) {
         try {
             PreparedStatement statement = connection
-                    .prepareStatement("SELECT a.id, a.title, up.source, a.content FROM articles AS a JOIN user_prompts AS up ON a.title = up.title AND a.title = ?");
+                    .prepareStatement(
+                            "SELECT a.id, a.title, up.source, a.content FROM articles AS a JOIN user_prompts AS up ON a.title = up.title AND a.title = ?");
             statement.setString(1, title);
             ResultSet result = statement.executeQuery();
             System.out.println(statement.toString());
@@ -169,6 +170,7 @@ public class TopicDAO {
         }
         return -1;
     }
+
     public void incrementIndexBy(long messageId, int count) {
         try {
             PreparedStatement statement = connection.prepareStatement(
@@ -182,5 +184,22 @@ public class TopicDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getTotalMatches(long messageId) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "select count(*) from messages as msg join user_prompts as up on msg.user_prompt = up.user_prompt and messageid = ?");
+            statement.setLong(1, messageId);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return result.getInt("count(*)");
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+        return -1;
     }
 }

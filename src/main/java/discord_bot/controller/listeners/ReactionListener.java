@@ -6,6 +6,7 @@ import discord_bot.utils.database.TopicDAO;
 import discord_bot.utils.enums.Table;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 public class ReactionListener extends ListenerAdapterImpl {
@@ -31,11 +32,15 @@ public class ReactionListener extends ListenerAdapterImpl {
                 return;
             }
             String userPrompt = topicDAO.getUserPrompt(messageId);
-            Table table  = topicDAO.getSourceById(messageId);
+            Table table = topicDAO.getSourceById(messageId);
             List<Topic> titles = topicDAO.getTopicsByUserPrompt(userPrompt, table);
             Topic topic = topicDAO.getTopicByTitle(titles.get(index).getTitle());
+            topic.setIndex(topicDAO.getPromptIndex(messageId));
+            topic.setTotalMatches(topicDAO.getTotalMatches(messageId));
 
             MessageChannel channel = event.getChannel();
+            MessageReaction reaction = new MessageReaction(channel, event.getReactionEmote(), messageId, false, 0);
+            reaction.removeReaction(event.getUser()).queue();
             channel.editMessageById(Long.toString(messageId), formatResponse(topic)).queue();
         }
     }

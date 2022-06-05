@@ -44,10 +44,10 @@ public class MessageListener extends ListenerAdapterImpl {
                 }
                 searcher = new StackExchangeSearcher();
                 searcher.setSite(source.getAsString());
-                searcher.setType(Table.STACKEXCHANGE);
+                searcher.setType(Table.fromString(source.getAsString()));
                 topicModel.setSearcher(searcher);
 
-                getData(event, query.getAsString(), Table.STACKEXCHANGE);
+                getData(event, query.getAsString(), Table.fromString(source.getAsString()));
                 break;
 
             default:
@@ -70,6 +70,7 @@ public class MessageListener extends ListenerAdapterImpl {
         event.getHook().sendMessage(formatResponse(topic)).queue((message) -> {
             long replyId = event.getHook().getInteraction().getMessageChannel().getLatestMessageIdLong();
             topicDao.insertMessage(topic, replyId, query);
+            topic.setTotalMatches(topicDao.getTotalMatches(replyId));
             MessageChannel channel = event.getChannel();
             channel.addReactionById(replyId, PREV_RESULT_EMOTE).queue();
             channel.addReactionById(replyId, NEXT_RESULT_EMOTE).queue();
