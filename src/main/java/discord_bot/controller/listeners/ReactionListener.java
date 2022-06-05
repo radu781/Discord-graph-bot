@@ -3,6 +3,7 @@ package discord_bot.controller.listeners;
 import java.util.List;
 
 import discord_bot.utils.database.TopicDAO;
+import discord_bot.utils.enums.Table;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
@@ -15,11 +16,11 @@ public class ReactionListener extends ListenerAdapterImpl {
         if (!event.getReaction().isSelf()) {
             long messageId = event.getReaction().getMessageIdLong();
             switch (event.getReactionEmote().getName()) {
-                case "◀️":
-                    topicDAO.incrementIndexBy(messageId, -1);
-                    break;
-                case "▶️":
+                case NEXT_RESULT_EMOTE:
                     topicDAO.incrementIndexBy(messageId, 1);
+                    break;
+                case PREV_RESULT_EMOTE:
+                    topicDAO.incrementIndexBy(messageId, -1);
                     break;
                 default:
                     return;
@@ -30,8 +31,9 @@ public class ReactionListener extends ListenerAdapterImpl {
                 return;
             }
             String userPrompt = topicDAO.getUserPrompt(messageId);
-            List<String> topics = topicDAO.getRelevantTitles(userPrompt);
-            Topic topic = topicDAO.getTopicByTitle(topics.get(index));
+            Table table  = topicDAO.getSourceById(messageId);
+            List<Topic> titles = topicDAO.getTopicsByUserPrompt(userPrompt, table);
+            Topic topic = topicDAO.getTopicByTitle(titles.get(index).getTitle());
 
             MessageChannel channel = event.getChannel();
             channel.editMessageById(Long.toString(messageId), formatResponse(topic)).queue();

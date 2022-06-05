@@ -19,7 +19,7 @@ import discord_bot.view.Topic;
 
 @RestController
 public class TopicController {
-    private TopicModel topicModel;
+    private TopicModel topicModel = new TopicModel();
 
     @GetMapping("/search/wiki")
     public ResponseEntity<Topic> getWikiInfo(

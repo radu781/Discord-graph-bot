@@ -15,13 +15,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 public class MessageListener extends ListenerAdapterImpl {
     private TopicModel topicModel = new TopicModel();
     private Searcher searcher;
+    private final TopicDAO topicDao = new TopicDAO();
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         switch (event.getName()) {
             case "search-wiki":
                 event.deferReply().queue();
-                topicModel.setTopicDAO(new TopicDAO());
                 OptionMapping option = event.getOption("query");
                 if (option == null) {
                     event.getHook().sendMessage("Unexpected error").queue();
@@ -36,8 +36,6 @@ public class MessageListener extends ListenerAdapterImpl {
 
             case "search-stack":
                 event.deferReply().queue();
-                topicModel.setTopicDAO(new TopicDAO());
-                topicModel.setIgnoreContent(true);
                 OptionMapping query = event.getOption("query");
                 OptionMapping source = event.getOption("source");
                 if (query == null || source == null) {
@@ -68,14 +66,13 @@ public class MessageListener extends ListenerAdapterImpl {
             event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
             return;
         }
-        topic.setIgnoreContent(topicModel.getIgnoreContent());
         topic.setSource(table);
         event.getHook().sendMessage(formatResponse(topic)).queue((message) -> {
             long replyId = event.getHook().getInteraction().getMessageChannel().getLatestMessageIdLong();
-            topicModel.getTopicDAO().insertMessage(topic, replyId, query);
+            topicDao.insertMessage(topic, replyId, query);
             MessageChannel channel = event.getChannel();
-            channel.addReactionById(replyId, "◀️").queue();
-            channel.addReactionById(replyId, "▶️").queue();
+            channel.addReactionById(replyId, PREV_RESULT_EMOTE).queue();
+            channel.addReactionById(replyId, NEXT_RESULT_EMOTE).queue();
         });
     }
 }

@@ -14,4 +14,12 @@ public enum Table {
     public String getName() {
         return name;
     }
+
+    public static Table fromString(String table) {
+        return switch (table) {
+            case "wikipedia" -> Table.WIKIPEDIA;
+            case "stackexchange" -> Table.STACKEXCHANGE;
+            default -> Table.UNKNOWN;
+        };
+    }
 }

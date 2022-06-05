@@ -8,24 +8,30 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 
+import discord_bot.utils.enums.Table;
 import discord_bot.view.Topic;
 
 public class TopicDAO {
     private Connection connection = DatabaseManager.getInstance().getConnection();
 
-    public List<String> getRelevantTitles(String userPrompt) {
-        List<String> out = new ArrayList<>();
+    public List<Topic> getTopicsByUserPrompt(String userPrompt, Table table) {
+        List<Topic> out = new ArrayList<>();
         try {
             PreparedStatement statement = connection
-                    .prepareStatement("SELECT title FROM user_prompts WHERE user_prompt = ?");
+                    .prepareStatement("SELECT * FROM user_prompts WHERE user_prompt = ? and source = ?");
             statement.setString(1, userPrompt);
+            statement.setString(2, table.getName());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
-                out.add(result.getString("title"));
+                Topic topic = new Topic();
+                topic.setTitle(result.getString("title"));
+                topic.setSource(Table.UNKNOWN);
+                topic.setId(result.getInt("id"));
+                out.add(topic);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            return out;
         }
         return out;
     }
@@ -33,7 +39,7 @@ public class TopicDAO {
     public Topic getTopicByTitle(String title) {
         try {
             PreparedStatement statement = connection
-                    .prepareStatement("SELECT * FROM articles WHERE title = ?");
+                    .prepareStatement("SELECT a.id, a.title, up.source, a.content FROM articles AS a JOIN user_prompts AS up ON a.title = up.title AND a.title = ?");
             statement.setString(1, title);
             ResultSet result = statement.executeQuery();
             System.out.println(statement.toString());
@@ -42,6 +48,7 @@ public class TopicDAO {
                 topic.setId(result.getInt("id"));
                 topic.setTitle(result.getString("title"));
                 topic.setContent(result.getString("content"));
+                topic.setSource(Table.fromString(result.getString("source")));
                 return topic;
             }
         } catch (SQLException e) {
@@ -131,6 +138,22 @@ public class TopicDAO {
         return null;
     }
 
+    public Table getSourceById(long messageId) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT source FROM messages WHERE messageid = ?");
+            statement.setLong(1, messageId);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return Table.fromString(result.getString("source"));
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Table.UNKNOWN;
+    }
+
     public int getPromptIndex(long messageId) {
         try {
             PreparedStatement statement = connection.prepareStatement(
@@ -146,7 +169,6 @@ public class TopicDAO {
         }
         return -1;
     }
-
     public void incrementIndexBy(long messageId, int count) {
         try {
             PreparedStatement statement = connection.prepareStatement(

@@ -4,9 +4,8 @@ import discord_bot.utils.enums.Table;
 
 public class Topic {
     private String title = "not found";
-    private String content = "not found";
+    private String content = "";
     private int id = -1;
-    private boolean ignoreContent = false;
     private Table source = Table.UNKNOWN;
 
     public void setTitle(String title) {
@@ -31,14 +30,6 @@ public class Topic {
 
     public int getId() {
         return id;
-    }
-
-    public void setIgnoreContent(boolean ignoreContent) {
-        this.ignoreContent = ignoreContent;
-    }
-
-    public boolean getIgnoreContent() {
-        return ignoreContent;
     }
 
     public void setSource(Table source) {

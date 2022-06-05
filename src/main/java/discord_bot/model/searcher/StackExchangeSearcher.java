@@ -35,7 +35,6 @@ public class StackExchangeSearcher implements Searcher {
         params.put("q", query);
         JSONObject response = Requester.executeRequest(LINK, Requester.build(params), Type.GET);
 
-        JSONObject pages = null;
         if (response != null) {
             return response;
         } else {
