@@ -3,14 +3,16 @@ package discord_bot.model.searcher;
 import java.util.List;
 import org.json.simple.JSONObject;
 
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 
 public interface Searcher {
     public void setSite(String site);
 
-    public void setType(Table table);
+    public void setType(SourceType type);
+
+    public SourceType getType();
 
     public JSONObject searchPages(String query) throws JSONParseException;
 

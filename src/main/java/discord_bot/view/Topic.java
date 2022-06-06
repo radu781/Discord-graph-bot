@@ -1,12 +1,12 @@
 package discord_bot.view;
 
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 
 public class Topic {
     private String title = "not found";
     private String content = "";
     private int id = -1;
-    private Table source = Table.UNKNOWN;
+    private SourceType source = SourceType.UNKNOWN;
     private int index;
     private int totalMatches;
 
@@ -34,11 +34,11 @@ public class Topic {
         return id;
     }
 
-    public void setSource(Table source) {
+    public void setSource(SourceType source) {
         this.source = source;
     }
 
-    public Table getSource() {
+    public SourceType getSource() {
         return source;
     }
 

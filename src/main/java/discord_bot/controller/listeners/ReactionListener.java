@@ -3,7 +3,7 @@ package discord_bot.controller.listeners;
 import java.util.List;
 
 import discord_bot.utils.database.TopicDAO;
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -32,7 +32,7 @@ public class ReactionListener extends ListenerAdapterImpl {
                 return;
             }
             String userPrompt = topicDAO.getUserPrompt(messageId);
-            Table table = topicDAO.getSourceById(messageId);
+            SourceType table = topicDAO.getSourceById(messageId);
             List<Topic> titles = topicDAO.getTopicsByUserPrompt(userPrompt, table);
             Topic topic = topicDAO.getTopicByTitle(titles.get(index).getTitle());
             topic.setIndex(topicDAO.getPromptIndex(messageId));

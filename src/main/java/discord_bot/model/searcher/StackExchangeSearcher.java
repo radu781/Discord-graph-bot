@@ -9,18 +9,23 @@ import org.json.simple.JSONObject;
 
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 
 public class StackExchangeSearcher implements Searcher {
     private static final String LINK = "https://api.stackexchange.com/2.3/search/advanced?";
     private String site;
-    private Table table;
+    private SourceType table;
 
     @Override
-    public void setType(Table table) {
+    public void setType(SourceType table) {
         this.table = table;
+    }
+
+    @Override
+    public SourceType getType() {
+        return table;
     }
 
     public void setSite(String site) {
@@ -63,6 +68,7 @@ public class StackExchangeSearcher implements Searcher {
             Topic topic = new Topic();
             topic.setTitle(title);
             topic.setId((int) questionId);
+            topic.setSource(table);
             searchTitles.add(topic);
         }
         return searchTitles;

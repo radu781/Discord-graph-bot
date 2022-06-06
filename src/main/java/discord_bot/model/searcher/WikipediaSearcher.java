@@ -9,17 +9,22 @@ import org.json.simple.JSONObject;
 
 import discord_bot.utils.Requester;
 import discord_bot.utils.Requester.Type;
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 
 public class WikipediaSearcher implements Searcher {
     private static final String LINK = "https://en.wikipedia.org/w/api.php?";
-    private Table table;
+    private SourceType table;
 
     @Override
-    public void setType(Table table) {
+    public void setType(SourceType table) {
         this.table = table;
+    }
+
+    @Override
+    public SourceType getType() {
+        return table;
     }
 
     @Override
@@ -75,6 +80,7 @@ public class WikipediaSearcher implements Searcher {
             JSONObject content = (JSONObject) (pages.get(key));
             currentTopic.setTitle(content.get("title").toString());
             currentTopic.setId(Integer.parseInt(content.get("pageid").toString()));
+            currentTopic.setSource(table);
             searchTitles.add(currentTopic);
         }
         return searchTitles;
@@ -93,6 +99,7 @@ public class WikipediaSearcher implements Searcher {
                     currentTopic.setTitle(content.get("title").toString());
                     currentTopic.setContent(formatString(content.get("extract").toString()));
                     currentTopic.setId(Integer.parseInt(content.get("pageid").toString()));
+                    currentTopic.setSource(table);
                     topics.add(currentTopic);
                 } catch (NullPointerException e) {
                 }

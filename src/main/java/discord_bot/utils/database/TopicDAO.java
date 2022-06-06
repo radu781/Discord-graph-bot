@@ -8,24 +8,24 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 import discord_bot.view.Topic;
 
 public class TopicDAO {
     private Connection connection = DatabaseManager.getInstance().getConnection();
 
-    public List<Topic> getTopicsByUserPrompt(String userPrompt, Table table) {
+    public List<Topic> getTopicsByUserPrompt(String userPrompt, SourceType source) {
         List<Topic> out = new ArrayList<>();
         try {
             PreparedStatement statement = connection
                     .prepareStatement("SELECT * FROM user_prompts WHERE user_prompt = ? and source = ?");
             statement.setString(1, userPrompt);
-            statement.setString(2, table.getName());
+            statement.setString(2, source.getName());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
                 Topic topic = new Topic();
                 topic.setTitle(result.getString("title"));
-                topic.setSource(table);
+                topic.setSource(source);
                 topic.setId(result.getInt("id"));
                 out.add(topic);
             }
@@ -49,7 +49,7 @@ public class TopicDAO {
                 topic.setId(result.getInt("id"));
                 topic.setTitle(result.getString("title"));
                 topic.setContent(result.getString("content"));
-                topic.setSource(Table.fromString(result.getString("source")));
+                topic.setSource(SourceType.fromString(result.getString("source")));
                 return topic;
             }
         } catch (SQLException e) {
@@ -79,7 +79,7 @@ public class TopicDAO {
         return null;
     }
 
-    public void insertPage(String userPrompt, Topic topic) {
+    public void insertPrompt(String userPrompt, Topic topic) {
         try {
             PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO user_prompts(id, user_prompt, title, source) VALUES(?, ?, ?, ?)");
@@ -139,20 +139,20 @@ public class TopicDAO {
         return null;
     }
 
-    public Table getSourceById(long messageId) {
+    public SourceType getSourceById(long messageId) {
         try {
             PreparedStatement statement = connection.prepareStatement(
                     "SELECT source FROM messages WHERE messageid = ?");
             statement.setLong(1, messageId);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
-                return Table.fromString(result.getString("source"));
+                return SourceType.fromString(result.getString("source"));
             }
         } catch (SQLIntegrityConstraintViolationException e) {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return Table.UNKNOWN;
+        return SourceType.UNKNOWN;
     }
 
     public int getPromptIndex(long messageId) {
@@ -171,11 +171,11 @@ public class TopicDAO {
         return -1;
     }
 
-    public void incrementIndexBy(long messageId, int count) {
+    public void incrementIndexBy(long messageId, int amount) {
         try {
             PreparedStatement statement = connection.prepareStatement(
                     "UPDATE messages SET current_index = MOD(current_index + ? + @count_number := (SELECT count(*) FROM (SELECT * FROM messages) AS msg JOIN user_prompts AS wp ON msg.user_prompt = wp.user_prompt AND msg.messageid = ? GROUP BY msg.user_prompt), @count_number) WHERE messageid = ?");
-            statement.setInt(1, count);
+            statement.setInt(1, amount);
             statement.setLong(2, messageId);
             statement.setLong(3, messageId);
             System.out.println(statement.toString());
@@ -189,8 +189,25 @@ public class TopicDAO {
     public int getTotalMatches(long messageId) {
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "select count(*) from messages as msg join user_prompts as up on msg.user_prompt = up.user_prompt and messageid = ?");
+                    "SELECT COUNT(*) FROM messages AS msg JOIN user_prompts AS up ON msg.user_prompt = up.user_prompt AND messageid = ?");
             statement.setLong(1, messageId);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return result.getInt("count(*)");
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+        return -1;
+    }
+
+    public int getTotalMatches(String userPrompt) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT COUNT(*) FROM user_prompts where user_prompt = ?");
+            statement.setString(1, userPrompt);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
                 return result.getInt("count(*)");

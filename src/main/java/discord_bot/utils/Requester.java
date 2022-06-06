@@ -19,36 +19,6 @@ import org.json.simple.JSONObject;
 public class Requester {
     private static final CloseableHttpClient httpClient = HttpClients.createDefault();
     private static final JSONParser jsonParser = new JSONParser();
-    private static final HashMap<String, String> commonSymbols = new HashMap<>() {
-        {
-            put(" ", "%20");
-            put("#", "%23");
-            put("\\$", "%24");
-            put("%", "%25");
-            put("&", "%26");
-            put("@", "%40");
-            put("`", "%60");
-            put("/", "%2F");
-            put(":", "%3A");
-            put(";", "%3B");
-            put("<", "%3C");
-            put("=", "%3D");
-            put(">", "%3E");
-            put("\\?", "%3F");
-            put("\\[", "%5B");
-            put("\\\\", "%5C");
-            put("\\]", "%5D");
-            put("\\^", "%5E");
-            put("\\{", "%7B");
-            put("\\|", "%7C");
-            put("\\}", "%7D");
-            put("~", "%7E");
-            put("“", "%22");
-            put("‘", "%27");
-            put("\\+", "%2B");
-            put(",", "%2C");
-        }
-    };
 
     public enum Type {
         GET
@@ -60,11 +30,7 @@ public class Requester {
         for (Map.Entry<String, String> pair : values.entrySet()) {
             out.append(pair.getKey());
             out.append("=");
-            String value = pair.getValue();
-            // for (Map.Entry<String, String> mapping : commonSymbols.entrySet()) {
-            //     value = value.replaceAll(mapping.getKey(), mapping.getValue());
-            // }
-            out.append(value);
+            out.append(pair.getValue());
             out.append("&");
         }
 

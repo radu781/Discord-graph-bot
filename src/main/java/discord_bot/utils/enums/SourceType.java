@@ -1,6 +1,6 @@
 package discord_bot.utils.enums;
 
-public enum Table {
+public enum SourceType {
     WIKIPEDIA("wikipedia"),
     STACKEXCHANGE("stackexchange"),
     STACKOVERLOW("stackoverflow"),
@@ -14,7 +14,7 @@ public enum Table {
 
     private String name;
 
-    private Table(String name) {
+    private SourceType(String name) {
         this.name = name;
     }
 
@@ -22,7 +22,7 @@ public enum Table {
         return name;
     }
 
-    public static Table fromString(String table) {
+    public static SourceType fromString(String table) {
         return switch (table) {
             case "wikipedia" -> WIKIPEDIA;
             case "stackexchange" -> STACKEXCHANGE;

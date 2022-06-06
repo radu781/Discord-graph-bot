@@ -4,6 +4,12 @@ classDiagram
         <<interface>>
         +searchPages(String query)* JSONObject
         +searchTitle(List~String~ titles)* List~JSONObject~
+        +unpackPages(String query) List~Topic~
+        +unpackTitles(List~JSONObject~ mainPages) List~Topic~
+        +formatString(String str) String
+        +setSite(String site)
+        +setType(SourceType type) void
+        +getType() SourceType
     }
     class WikipediaSearcher {
         -String LINK
@@ -16,31 +22,55 @@ classDiagram
     class Topic {
         -String title
         -String content
-        -int pageId
+        -int id
+        -SourceType source
+        -int index
+        -int totalMatches
 
-        +setTitle(String title) void
+        +setTitle(String) void
         +getTitle() String
-        +setContent(String content) void
+        +setContent(String) void
         +getContent() String
-        +setPageId(int pageId) void
-        -getPageId() int
+        +setId(int) void
+        +getId() int
+        +setSourceType(SourceType) void
+        +getSourceType() SourceType
+        +setIndex(int) void
+        +getIndex() int
+        +setTotalMatches(int) void
+        +getTotalMatches() int
     }
     class TopicModel {
         -Searcher searcher
+        -topicDAO TopicDAO
+        -boolean readOnly
 
         +searchResultByIndex(String query, int index) Topic
+        +getResultByIndex(String query, int index) Topic
+        +getTitles(String query) List~Topic~
+        +getPages(List~Topic~ searchTitles) List~Topic~
+        +setSearcher(Searcher) void
+        +setReadOnly(boolean) void
+        +isReadOnly() boolean
     }
     class TopicController {
         <<service>>
         -TopicModel topicModel
 
-        +getInfo(q, index) ResponseEntity~Topic~
+        +GET /search/wiki(String q, int index)
+        +POST /search/wiki(String q, int index)
+        +GET /search/stack(String q, String source, int index)
+        +POST /search/stack(String q, String source, int index)
     }
 
 
     class Requester {
+        -CloseableHttpClient httpClient$
+        -JSONParser jsonParser$
+
         +build(HashMap~String, String~ keyValues)$ String
         +executeRequest(String link, String urlPath, Type type)$ String
+        +getResponse(HttpResponseBase request)$ JSONObject
     }
 
     class ListenerAdapter {
@@ -52,7 +82,7 @@ classDiagram
     }
     class MessageListener {
         +onSlashCommandInteraction(event) void
-        +formatResponse(Topic) String
+        +getData(event, String query, SourceType type) void
     }
     class ReactionListener {
         +onMessageReactionAdd(event) void
@@ -66,8 +96,32 @@ classDiagram
     }
     class TopicDAO {
         -Connection connection
-        +getRelevantTitle(String prompt) List~String~
-        +getTopic(String title) Topic
+
+        +getTopicsByUserPrompt(String userPrompt, SourceType source) List~Topic~
+        +getTopicByTitle(String title) Topic
+        +getTopicById(long id) Topic
+        +insertPrompt(String userPrompt, Topic topic) void
+        +insertArticle(Topic topic) void
+        +insertMessage(Topic, long id, String userPrompt) void
+        +getUserPrompt(long id) String
+        +getSourceById(long id) SourceType
+        +getPromptIndex(long id) int
+        +incrementIndexBy(long id, int amount) void
+        +getTotalMatches(long id) int
+        +getTotalMatches(String userPrompt)
+    }
+    class SourceType {
+        <<enumeration>>
+        +WIKIPEDIA
+        +STACKEXCHANGE
+        +STACKOVERFLOW
+        +ASKUBUNTU
+        +SERVERFAULT
+        +SUPERUSER
+        +MATH
+        +ASK_DIFFERENT
+        +THEORETICAL_CS
+        +UNKNOWN
     }
 
     class SpringApplication {
@@ -75,16 +129,19 @@ classDiagram
     }
     class DiscordBot {
         +run()$ void
+        +addServerCommands()$
+        +addGlobalCommands()$
     }
     class Main {
         +main(String[] args)$ void
     }
 
 
-    DatabaseManager .. TopicDAO
-    TopicDAO .. Topic
+    DatabaseManager .. TopicDAO:uses
+    TopicDAO .. Topic:uses
+    Topic .. SourceType:uses
 
-    ListenerAdapter <|-- ListenerAdapterImpl
+    ListenerAdapter <|-- ListenerAdapterImpl:implements
     ListenerAdapterImpl <|-- MessageListener:extends
     ListenerAdapterImpl <|-- ReactionListener:extends
     MessageListener .. TopicModel:uses
@@ -94,8 +151,8 @@ classDiagram
     TopicModel .. Topic:uses
     TopicModel .. Searcher:uses
 
-    Searcher <|-- WikipediaSearcher:extends
-    Searcher <|-- StackSearcher:extends
+    Searcher <|-- WikipediaSearcher:implements
+    Searcher <|-- StackSearcher:implements
     WikipediaSearcher .. Requester:uses
     StackSearcher .. Requester:uses
 

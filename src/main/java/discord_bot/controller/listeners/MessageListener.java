@@ -5,7 +5,7 @@ import discord_bot.model.searcher.Searcher;
 import discord_bot.model.searcher.StackExchangeSearcher;
 import discord_bot.model.searcher.WikipediaSearcher;
 import discord_bot.utils.database.TopicDAO;
-import discord_bot.utils.enums.Table;
+import discord_bot.utils.enums.SourceType;
 import discord_bot.utils.exceptions.JSONParseException;
 import discord_bot.view.Topic;
 import net.dv8tion.jda.api.entities.MessageChannel;
@@ -28,10 +28,10 @@ public class MessageListener extends ListenerAdapterImpl {
                     return;
                 }
                 searcher = new WikipediaSearcher();
-                searcher.setType(Table.WIKIPEDIA);
+                searcher.setType(SourceType.WIKIPEDIA);
                 topicModel.setSearcher(searcher);
 
-                getData(event, option.getAsString(), Table.WIKIPEDIA);
+                getData(event, option.getAsString(), SourceType.WIKIPEDIA);
                 break;
 
             case "search-stack":
@@ -44,10 +44,10 @@ public class MessageListener extends ListenerAdapterImpl {
                 }
                 searcher = new StackExchangeSearcher();
                 searcher.setSite(source.getAsString());
-                searcher.setType(Table.fromString(source.getAsString()));
+                searcher.setType(SourceType.fromString(source.getAsString()));
                 topicModel.setSearcher(searcher);
 
-                getData(event, query.getAsString(), Table.fromString(source.getAsString()));
+                getData(event, query.getAsString(), SourceType.fromString(source.getAsString()));
                 break;
 
             default:
@@ -58,15 +58,16 @@ public class MessageListener extends ListenerAdapterImpl {
         }
     }
 
-    private void getData(SlashCommandInteractionEvent event, String query, Table table) {
+    private void getData(SlashCommandInteractionEvent event, String query, SourceType source) {
         Topic topic;
+        topicModel.setReadOnly(false);
         try {
-            topic = topicModel.getResultByIndex(query, 0, false, table);
+            topic = topicModel.getResultByIndex(query, 0);
         } catch (JSONParseException e) {
             event.getHook().sendMessage("Query failed\n" + e.getMessage()).queue();
             return;
         }
-        topic.setSource(table);
+        topic.setSource(source);
         event.getHook().sendMessage(formatResponse(topic)).queue((message) -> {
             long replyId = event.getHook().getInteraction().getMessageChannel().getLatestMessageIdLong();
             topicDao.insertMessage(topic, replyId, query);
